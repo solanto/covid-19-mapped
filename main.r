@@ -1,84 +1,93 @@
-# use install.packages("needs") if not already installed
+# if not already installed, call:
+# install.packages("needs")
+# needs(remotes)
+# install_github("hrbrmstr/albersusa")
+
+# 📦 packages 📦
+
 library(needs)
 
-# packages
 needs(
     shiny,
     magrittr,
     plotly,
     jsonlite,
-    dplyr
+    dplyr,
+    leaflet,
+    tigris
 )
- 
-# get data
+
+library(albersusa)
+
+# 📦 -------- 📦
+
+# 🗃️ get data 🗃️
+
 state_abbreviations <- setNames(state.name, state.abb)
 
 hospital_stats <- read.csv("https://healthdata.gov/resource/g62h-syeh.csv") %>%
     mutate(state_full = as.character(state_abbreviations[state]))
 
-states <- fromJSON("state-boundaries.geojson")
+test_stats <- read.csv("12-31-2020.csv")
 
-map_base <- plot_ly(hospital_stats) %>%
-    layout(
-        geo = list(
-            scope = "usa",
-            bgcolor = "transparent"
-        ),
-        paper_bgcolor = "transparent",
-        plot_bgcolor = "transparent"
-    )
+# 🗃️ -------- 🗃️
 
-generate_map <- function(data_option) {
-    map_base %>%
-    add_trace(
-        type = "choropleth",
-        geojson = states,
-        # locationmode = "USA-states",
-        locationmode = "geojson-id",
-        featureidkey = "properties.NAME",
-        locations = ~state_full,
-        z = hospital_stats[[data_option]]
-    )
-}
-
-test <- hospital_stats %>%
-    group_by(state_full) %>%
-    summarize(
-        covid_inpatients = sum(inpatient_beds_used_covid, na.rm = TRUE)
-    ) %>%
-    plot_ly() %>%
-    layout(
-        geo = list(
-            scope = "usa",
-            bgcolor = "transparent"
-        ),
-        paper_bgcolor = "transparent",
-        plot_bgcolor = "transparent"
-    ) %>%
-    add_trace(
-        type = "choropleth",
-        geojson = states,
-        # locationmode = "USA-states",
-        locationmode = "geojson-id",
-        featureidkey = "properties.NAME",
-        locations = ~state_full,
-        z = ~covid_inpatients
-    )
+# ✨ shiny setup ✨
 
 ui <- fluidPage(
+    tags$head(
+        tags$style("
+            .leaflet-container {
+                background-color: transparent;
+            }
+        ")
+    ),
     mainPanel(
         selectInput(
             "data_select",
             "yee",
-            c("deaths_covid", "inpatient_beds_used_covid"),
-            selected = "deaths_covid"
+            c(
+                "critical_staffing_shortage_today_yes",
+                "deaths_covid",
+                "inpatient_beds_used_covid"
+            ),
+            # c("Deaths", "Active"),
+            selected = "critical_staffing_shortage_today_yes"
         ),
-        plotlyOutput(outputId = "map")
+        leafletOutput("map")
     )
 )
 
+epsg2163 <- leafletCRS(
+    crsClass = "L.Proj.CRS",
+    code = "EPSG:2163",
+    proj4def = "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +a=6370997 +b=6370997 +units=m +no_defs",
+    resolutions = 2 ^ (16:7)
+)
+
 server <- function(input, output) {
-    output$map <- renderPlotly({generate_map(input$data_select)})
+    output$map <- renderLeaflet({
+        usa_sf() %>%
+            left_join(
+                test_stats,
+                by = c("name" = "Province_State")
+            ) %>%
+            leaflet(options = leafletOptions(
+                crs = epsg2163,
+                zoomControl = FALSE
+                # TODO: https://stackoverflow.com/a/58082967
+            )) %>%
+            addPolygons(
+                popup = ~as.character(Deaths),
+                color = "#333",
+                fillColor = ~colorNumeric("OrRd", domain = Deaths)(Deaths),
+                opacity = 1,
+                fillOpacity = 1,
+                weight = 1
+            )
+    })
 }
 
 shinyApp(ui = ui, server = server)
+
+# ✨ ----------- ✨
