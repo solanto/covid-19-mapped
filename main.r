@@ -21,12 +21,18 @@ library(albersusa)
 
 # ---- get data
 
+# ------ states
+
 state_abbreviations <- setNames(state.name, state.abb)
 
 hospital_data <-
-    read.csv("https://healthdata.gov/resource/g62h-syeh.csv") %>%
-    mutate(state_full = as.character(state_abbreviations[state]))
-
+    "https://healthdata.gov/resource/g62h-syeh.csv" %>%
+    read.csv() %>%
+    group_by(state) %>%
+    summarize(
+        hospitalizations = sum(inpatient_beds_used_covid, na.rm = TRUE)
+    ) %>%
+    mutate(state = as.character(state_abbreviations[state]))
 
 csse_data <-
     (Sys.Date() - 1) %>% # yesterday
@@ -39,11 +45,35 @@ csse_data <-
     ) %>%
     read.csv()
 
+state_data <-
+    full_join(
+        hospital_data,
+        csse_data,
+        by = c("state" = "Province_State")
+    ) %>%
+    mutate(
+        name = state,
+        deaths = Deaths,
+        confirmed = Confirmed
+    ) %>%
+    select(
+        name,
+        deaths,
+        confirmed,
+        hospitalizations
+    ) %>%
+    left_join(
+        usa_sf(),
+        .,
+        by = "name"
+    )
+
 # ---- shiny setup
 
 data_options <- c(
-    "Deaths" = "Deaths",
-    "Confirmed Cases" = "Confirmed"
+    "Deaths" = "deaths",
+    "Confirmed cases" = "confirmed",
+    "Hospitalizations" = "hospitalizations"
 )
 
 ui <- fluidPage(
@@ -55,13 +85,11 @@ ui <- fluidPage(
         ")
     ),
     mainPanel(
-        p(textOutput("debug")),
         selectInput(
-            "data_select",
-            "yee",
-            names(data_options),
-            # c("Deaths", "Active"),
-            selected = "critical_staffing_shortage_today_yes"
+            inputId = "data_select",
+            label = "yee",
+            choices = names(data_options),
+            selected = names(data_options)[1]
         ),
         leafletOutput("map")
     )
@@ -74,22 +102,18 @@ epsg2163 <- leafletCRS(
     resolutions = 2 ^ (16:7)
 )
 
-get_map <- function(stats, bindings, field) {
-    data <- usa_sf() %>%
-    left_join(
-        stats,
-        by = bindings
-    )
-
-    displayed <- data[[field]]
+get_map <- function(field) {
+    displayed <- state_data[[field]]
     
     return (
-        data %>%
-        leaflet(options = leafletOptions(
-            crs = epsg2163,
-            zoomControl = FALSE
-            # TODO: https://stackoverflow.com/a/58082967
-        )) %>%
+        state_data %>%
+        leaflet(
+            options = leafletOptions(
+                crs = epsg2163,
+                zoomControl = FALSE
+                # TODO: https://stackoverflow.com/a/58082967
+            )
+        ) %>%
         addPolygons(
             popup = as.character(displayed),
             color = "#333",
@@ -103,11 +127,7 @@ get_map <- function(stats, bindings, field) {
 
 server <- function(input, output) {
     output$map <- renderLeaflet({
-        get_map(
-            stats = csse_data,
-            bindings = c("name" = "Province_State"),
-            field = as.character(data_options[input$data_select])
-        )
+        get_map(as.character(data_options[input$data_select]))
     })
 }
 
