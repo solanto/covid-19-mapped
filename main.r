@@ -68,6 +68,8 @@ state_data <-
         by = "name"
     )
 
+rm(hospital_data, csse_data)
+
 # ---- shiny setup
 
 data_options <- c(
