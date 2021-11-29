@@ -3,7 +3,7 @@
 # needs(remotes)
 # install_github("hrbrmstr/albersusa")
 
-# 📦 packages 📦
+# ---- packages
 
 library(needs)
 
@@ -19,9 +19,7 @@ needs(
 
 library(albersusa)
 
-# 📦 -------- 📦
-
-# 🗃️ get data 🗃️
+# ---- get data
 
 state_abbreviations <- setNames(state.name, state.abb)
 
@@ -30,9 +28,7 @@ hospital_stats <- read.csv("https://healthdata.gov/resource/g62h-syeh.csv") %>%
 
 test_stats <- read.csv("12-31-2020.csv")
 
-# 🗃️ -------- 🗃️
-
-# ✨ shiny setup ✨
+# ---- shiny setup
 
 ui <- fluidPage(
     tags$head(
@@ -89,5 +85,3 @@ server <- function(input, output) {
 }
 
 shinyApp(ui = ui, server = server)
-
-# ✨ ----------- ✨
