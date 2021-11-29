@@ -23,12 +23,28 @@ library(albersusa)
 
 state_abbreviations <- setNames(state.name, state.abb)
 
-hospital_stats <- read.csv("https://healthdata.gov/resource/g62h-syeh.csv") %>%
-    mutate(state_full = as.character(state_abbreviations[state]))
+hospital_stats <-
+    read.csv("https://healthdata.gov/resource/g62h-syeh.csv") %>%
+        mutate(state_full = as.character(state_abbreviations[state]))
 
-test_stats <- read.csv("12-31-2020.csv")
+csse_data <-
+    (Sys.Date() - 1) %>% # yesterday
+        format("%m-%d-%Y") %>%
+        paste(
+            "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports_us/",
+            .,
+            ".csv",
+            sep = ""
+        ) %>%
+        read.csv()
 
 # ---- shiny setup
+
+data_options <- c(
+    "Deaths" = "Deaths",
+    "Confirmed Cases" = "Confirmed",
+    "Recoveries" = "Recovered"
+)
 
 ui <- fluidPage(
     tags$head(
@@ -39,14 +55,11 @@ ui <- fluidPage(
         ")
     ),
     mainPanel(
+        p(textOutput("debug")),
         selectInput(
             "data_select",
             "yee",
-            c(
-                "critical_staffing_shortage_today_yes",
-                "deaths_covid",
-                "inpatient_beds_used_covid"
-            ),
+            names(data_options),
             # c("Deaths", "Active"),
             selected = "critical_staffing_shortage_today_yes"
         ),
@@ -61,26 +74,40 @@ epsg2163 <- leafletCRS(
     resolutions = 2 ^ (16:7)
 )
 
-server <- function(input, output) {
-    output$map <- renderLeaflet({
-        usa_sf() %>%
-            left_join(
-                test_stats,
-                by = c("name" = "Province_State")
-            ) %>%
+get_map <- function(stats, bindings, field) {
+    data <- usa_sf() %>%
+        left_join(
+            stats,
+            by = bindings
+        )
+
+    displayed <- data[[field]]
+    
+    return (
+        data %>%
             leaflet(options = leafletOptions(
                 crs = epsg2163,
                 zoomControl = FALSE
                 # TODO: https://stackoverflow.com/a/58082967
             )) %>%
             addPolygons(
-                popup = ~as.character(Deaths),
+                popup = as.character(displayed),
                 color = "#333",
-                fillColor = ~colorNumeric("OrRd", domain = Deaths)(Deaths),
+                fillColor = colorNumeric("OrRd", domain = displayed)(displayed),
                 opacity = 1,
                 fillOpacity = 1,
                 weight = 1
             )
+    )
+}
+
+server <- function(input, output) {
+    output$map <- renderLeaflet({
+        get_map(
+            stats = csse_data,
+            bindings = c("name" = "Province_State"),
+            field = as.character(data_options[input$data_select])
+        )
     })
 }
 
