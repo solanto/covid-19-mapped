@@ -23,27 +23,27 @@ library(albersusa)
 
 state_abbreviations <- setNames(state.name, state.abb)
 
-hospital_stats <-
+hospital_data <-
     read.csv("https://healthdata.gov/resource/g62h-syeh.csv") %>%
-        mutate(state_full = as.character(state_abbreviations[state]))
+    mutate(state_full = as.character(state_abbreviations[state]))
+
 
 csse_data <-
     (Sys.Date() - 1) %>% # yesterday
-        format("%m-%d-%Y") %>%
-        paste(
-            "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports_us/",
-            .,
-            ".csv",
-            sep = ""
-        ) %>%
-        read.csv()
+    format("%m-%d-%Y") %>%
+    paste(
+        "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports_us/",
+        .,
+        ".csv",
+        sep = ""
+    ) %>%
+    read.csv()
 
 # ---- shiny setup
 
 data_options <- c(
     "Deaths" = "Deaths",
-    "Confirmed Cases" = "Confirmed",
-    "Recoveries" = "Recovered"
+    "Confirmed Cases" = "Confirmed"
 )
 
 ui <- fluidPage(
@@ -76,28 +76,28 @@ epsg2163 <- leafletCRS(
 
 get_map <- function(stats, bindings, field) {
     data <- usa_sf() %>%
-        left_join(
-            stats,
-            by = bindings
-        )
+    left_join(
+        stats,
+        by = bindings
+    )
 
     displayed <- data[[field]]
     
     return (
         data %>%
-            leaflet(options = leafletOptions(
-                crs = epsg2163,
-                zoomControl = FALSE
-                # TODO: https://stackoverflow.com/a/58082967
-            )) %>%
-            addPolygons(
-                popup = as.character(displayed),
-                color = "#333",
-                fillColor = colorNumeric("OrRd", domain = displayed)(displayed),
-                opacity = 1,
-                fillOpacity = 1,
-                weight = 1
-            )
+        leaflet(options = leafletOptions(
+            crs = epsg2163,
+            zoomControl = FALSE
+            # TODO: https://stackoverflow.com/a/58082967
+        )) %>%
+        addPolygons(
+            popup = as.character(displayed),
+            color = "#333",
+            fillColor = colorNumeric("OrRd", domain = displayed)(displayed),
+            opacity = 1,
+            fillOpacity = 1,
+            weight = 1
+        )
     )
 }
 
