@@ -153,7 +153,7 @@ data_levels <- list(
 # free up memory
 rm(hospital_data, csse_data)
 
-# ---- prerender views
+# ---- pre-generate views
 
 # map projection
 epsg2163 <- leafletCRS(
@@ -218,29 +218,30 @@ maps <- data_levels %>%
     )
 
 summary_figures <-
-    data_options %>% 
-    set_names(data_options) %>% 
+    data_options %>%
+    set_names(data_options) %>%
     lapply(
         . %>%
             data_levels$state[[.]] %>%
             sum(na.rm = TRUE) %>%
-            comma(digits = 0)
+            comma(digits = 0) %>%
+            tags$strong()
     )
 
 summaries <- list(
-    "deaths" = paste(
-        "In total,",
+    "deaths" = tags$p(
+        "In total, ",
         summary_figures$deaths,
-        "people have died due to COVID-19 in the US."
+        " people have died due to COVID-19 in the US."
     ),
-    "confirmed" = paste(
+    "confirmed" = tags$p(
         summary_figures$confirmed,
-        "COVID-19 cases have been documented in the US."
+        " COVID-19 cases have been documented in the US."
     ),
-    "hospitalizations" = paste(
-        "In total, COVID-19 has resulted in",
+    "hospitalizations" = tags$p(
+        "In total, COVID-19 has resulted in ",
         summary_figures$hospitalizations,
-        "hosptalizations in the US."
+        " hosptalizations in the US."
     )
 )
         
@@ -287,9 +288,8 @@ ui <- fluidPage(
             class = "map-display"
         ),
         tags$section(
-            tags$p(
-                textOutput("summary")
-            )
+            htmlOutput("summary"),
+            class = "summary"
         )
     )
 )
@@ -303,7 +303,7 @@ server <- function(input, output) {
         maps[[input$level_select]][[option()]]
     )
 
-    output$summary <- renderText(
+    output$summary <- renderUI(
         summaries[[option()]]
     )
 }

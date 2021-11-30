@@ -30,7 +30,6 @@ body {
     font-family: "PT Serif";
     font-weight: bold;
     font-size: 3rem;
-    margin-bottom: 8rem;
 
     .shiny-input-container {
         display: grid;
@@ -86,4 +85,16 @@ body {
 
 [role="main"] {
     padding: 0;
+}
+
+.summary {
+    font-size: 1.2em;
+
+    strong {
+        font-weight: bold;
+    }
+}
+
+.user-input, .leaflet-container {
+    margin-bottom: 8rem;
 }
