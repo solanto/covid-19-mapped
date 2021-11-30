@@ -171,7 +171,7 @@ ui <- fluidPage(
             crossorigin = TRUE
         ),
         tags$link(
-            href = "https://fonts.googleapis.com/css2?family=PT+Serif:wght@700&family=Roboto:wght@300&display=swap",
+            href = "https://fonts.googleapis.com/css2?family=PT+Serif:wght@700&family=Roboto&display=swap",
             rel = "stylesheet"
         )
     ),
