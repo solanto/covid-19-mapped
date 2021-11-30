@@ -136,6 +136,11 @@ rm(hospital_data, csse_data)
 ui <- fluidPage(
     tags$head(
         tags$style("
+            body {
+                background-color: black;
+                color: white;
+            }
+
             .leaflet-container {
                 background-color: transparent;
             }
@@ -196,7 +201,8 @@ get_map <- function(level, option) {
             fillColor = color_palette(displayed),
             opacity = 1,
             fillOpacity = 1,
-            weight = 0
+            weight = 0.6,
+
         ) %>%
         addLegend(
             "bottomright",
