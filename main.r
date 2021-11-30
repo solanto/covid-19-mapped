@@ -196,13 +196,14 @@ get_map <- function(level, option) {
             fillColor = color_palette(displayed),
             opacity = 1,
             fillOpacity = 1,
-            weight = 1
+            weight = 0
         ) %>%
         addLegend(
             "bottomright",
             pal = color_palette,
             values = displayed,
-            opacity = 1
+            opacity = 1,
+            na.label = "No data"
         )
     )
 }
