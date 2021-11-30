@@ -69,6 +69,7 @@ state_data <-
         by = "name"
     )
 
+# we don't need these anymore
 rm(hospital_data, csse_data)
 
 # ---- shiny setup
