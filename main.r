@@ -15,12 +15,27 @@ needs(
     dplyr,
     leaflet,
     tigris,
-    formattable
+    formattable,
+    rlang
 )
 
 library(albersusa)
 
 # ---- get data
+
+yesterday <-
+    (Sys.Date() - 1) %>%
+    format("%m-%d-%Y")
+
+latest_csse_upload <- function(base_url) {
+    paste(
+        base_url,
+        yesterday,
+        ".csv",
+        sep = ""
+    ) %>%
+    read.csv()
+}
 
 # ------ states
 
@@ -36,15 +51,8 @@ hospital_data <-
     mutate(state = as.character(state_abbreviations[state]))
 
 csse_data <-
-    (Sys.Date() - 1) %>% # yesterday
-    format("%m-%d-%Y") %>%
-    paste(
-        "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports_us/",
-        .,
-        ".csv",
-        sep = ""
-    ) %>%
-    read.csv()
+    "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports_us/" %>%
+    latest_csse_upload()
 
 state_data <-
     full_join(
@@ -72,12 +80,43 @@ state_data <-
 # we don't need these anymore
 rm(hospital_data, csse_data)
 
+# ------ counties
+
+county_data <-
+    "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/" %>%
+    latest_csse_upload() %>%
+    filter(Country_Region == "US") %>%
+    mutate(
+        fips = formatC(
+            FIPS,
+            width = 5,
+            flag = "0"
+        ),
+        deaths = Deaths,
+        confirmed = Confirmed
+    ) %>%
+    select(
+        fips,
+        deaths,
+        confirmed
+    ) %>%
+    left_join(
+        counties_sf(),
+        .,
+        by = "fips"
+    )
+
 # ---- shiny setup
 
 data_options <- c(
     "Deaths" = "deaths",
     "Confirmed cases" = "confirmed",
     "Hospitalizations" = "hospitalizations"
+)
+
+data_levels <- env(
+    "State" = state_data,
+    "County" = county_data
 )
 
 ui <- fluidPage(
@@ -90,10 +129,16 @@ ui <- fluidPage(
     ),
     mainPanel(
         selectInput(
-            inputId = "data_select",
+            inputId = "option_select",
             label = "yee",
             choices = names(data_options),
-            selected = names(data_options)[1]
+            selected = "Confirmed cases"
+        ),
+        selectInput(
+            inputId = "level_select",
+            label = "owo",
+            choices = names(data_levels),
+            selected = "State"
         ),
         leafletOutput("map")
     )
@@ -107,12 +152,19 @@ epsg2163 <- leafletCRS(
     resolutions = 2 ^ (16:7)
 )
 
-get_map <- function(field) {
-    displayed <- state_data[[field]]
+get_map <- function(level, option) {
+    data <- data_levels[[level]]
+
+    displayed <-
+        option %>%
+        data_options[.] %>%
+        as.character() %>%
+        data[[.]]
+
     color_palette <- colorNumeric("OrRd", domain = displayed)
     
     return (
-        state_data %>%
+        data %>%
         leaflet(
             options = leafletOptions(
                 crs = epsg2163,
@@ -122,7 +174,7 @@ get_map <- function(field) {
         ) %>%
         addPolygons(
             popup = paste(
-                state_data$name,
+                data$name,
                 displayed %>% comma(digits = 0) %>% as.character(),
                 sep = ": "
             ),
@@ -143,7 +195,10 @@ get_map <- function(field) {
 
 server <- function(input, output) {
     output$map <- renderLeaflet({
-        get_map(as.character(data_options[input$data_select]))
+        get_map(
+            level = input$level_select,
+            option = input$option_select
+        )
     })
 }
 
