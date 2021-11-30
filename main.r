@@ -14,7 +14,8 @@ needs(
     jsonlite,
     dplyr,
     leaflet,
-    tigris
+    tigris,
+    formattable
 )
 
 library(albersusa)
@@ -106,6 +107,7 @@ epsg2163 <- leafletCRS(
 
 get_map <- function(field) {
     displayed <- state_data[[field]]
+    color_palette <- colorNumeric("OrRd", domain = displayed)
     
     return (
         state_data %>%
@@ -117,12 +119,22 @@ get_map <- function(field) {
             )
         ) %>%
         addPolygons(
-            popup = as.character(displayed),
+            popup = paste(
+                state_data$name,
+                displayed %>% comma(digits = 0) %>% as.character(),
+                sep = ": "
+            ),
             color = "#333",
-            fillColor = colorNumeric("OrRd", domain = displayed)(displayed),
+            fillColor = color_palette(displayed),
             opacity = 1,
             fillOpacity = 1,
             weight = 1
+        ) %>%
+        addLegend(
+            "bottomright",
+            pal = color_palette,
+            values = displayed,
+            opacity = 1
         )
     )
 }
