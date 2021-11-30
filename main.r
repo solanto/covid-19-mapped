@@ -16,10 +16,33 @@ needs(
     leaflet,
     tigris,
     formattable,
-    rlang
+    sass
 )
 
 library(albersusa)
+
+# ---- build styles
+
+public_dir <- "dist"
+
+dir.create(public_dir, showWarnings = FALSE)
+
+styles_path <-
+    paste(
+        public_dir,
+        "/styles.css",
+        sep = ""
+    )
+
+sass(
+    sass_file("styles.scss"),
+    output = styles_path
+)
+
+addResourcePath(
+    prefix = public_dir,
+    directoryPath = public_dir
+)
 
 # ---- get data
 
@@ -135,16 +158,11 @@ rm(hospital_data, csse_data)
 
 ui <- fluidPage(
     tags$head(
-        tags$style("
-            body {
-                background-color: black;
-                color: white;
-            }
-
-            .leaflet-container {
-                background-color: transparent;
-            }
-        ")
+        tags$link(
+            href = styles_path,
+            rel = "stylesheet",
+            type = "text/css"
+        )
     ),
     mainPanel(
         selectInput(
