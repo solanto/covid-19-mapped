@@ -98,6 +98,7 @@ ui <- fluidPage(
     )
 )
 
+# map projection
 epsg2163 <- leafletCRS(
     crsClass = "L.Proj.CRS",
     code = "EPSG:2163",
