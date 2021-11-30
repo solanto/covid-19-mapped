@@ -37,87 +37,101 @@ latest_csse_upload <- function(base_url) {
     read.csv()
 }
 
-# ------ states
-
-state_abbreviations <- setNames(state.name, state.abb)
-
-hospital_data <-
-    "https://healthdata.gov/resource/g62h-syeh.csv" %>%
-    read.csv() %>%
-    group_by(state) %>%
-    summarize(
-        hospitalizations = sum(inpatient_beds_used_covid, na.rm = TRUE)
-    ) %>%
-    mutate(state = as.character(state_abbreviations[state]))
-
-csse_data <-
-    "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports_us/" %>%
-    latest_csse_upload()
-
-state_data <-
-    full_join(
-        hospital_data,
-        csse_data,
-        by = c("state" = "Province_State")
-    ) %>%
-    mutate(
-        name = state,
-        deaths = Deaths,
-        confirmed = Confirmed
-    ) %>%
-    select(
-        name,
-        deaths,
-        confirmed,
-        hospitalizations
-    ) %>%
-    left_join(
-        usa_sf(),
-        .,
-        by = "name"
-    )
-
-# we don't need these anymore
-rm(hospital_data, csse_data)
-
-# ------ counties
-
-county_data <-
-    "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/" %>%
-    latest_csse_upload() %>%
-    filter(Country_Region == "US") %>%
-    mutate(
-        fips = formatC(
-            FIPS,
-            width = 5,
-            flag = "0"
-        ),
-        deaths = Deaths,
-        confirmed = Confirmed
-    ) %>%
-    select(
-        fips,
-        deaths,
-        confirmed
-    ) %>%
-    left_join(
-        counties_sf(),
-        .,
-        by = "fips"
-    )
-
-# ---- shiny setup
-
 data_options <- c(
     "Deaths" = "deaths",
     "Confirmed cases" = "confirmed",
     "Hospitalizations" = "hospitalizations"
 )
 
-data_levels <- env(
-    "State" = state_data,
-    "County" = county_data
+data_levels <- list(
+    "State" = {
+        state_abbreviations <- setNames(state.name, state.abb)
+
+        hospital_data <-
+            "https://healthdata.gov/resource/g62h-syeh.csv" %>%
+            read.csv() %>%
+            group_by(state) %>%
+            summarize(
+                hospitalizations = sum(inpatient_beds_used_covid, na.rm = TRUE)
+            ) %>%
+            mutate(state = as.character(state_abbreviations[state]))
+
+        csse_data <-
+            "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports_us/" %>%
+            latest_csse_upload()
+
+        # final data
+        full_join(
+            hospital_data,
+            csse_data,
+            by = c("state" = "Province_State")
+        ) %>%
+        mutate(
+            name = state,
+            deaths = Deaths,
+            confirmed = Confirmed
+        ) %>%
+        select(
+            name,
+            deaths,
+            confirmed,
+            hospitalizations
+        ) %>%
+        left_join(
+            usa_sf(),
+            .,
+            by = "name"
+        )
+    },
+    "County" = {
+        pad_fips <- . %>%
+            formatC(
+                width = 5,
+                flag = "0"
+            )
+
+        hospital_data <-
+            "https://healthdata.gov/resource/di4u-7yu6.csv" %>%
+            read.csv() %>%
+            mutate(
+                fips = pad_fips(fips),
+                hospitalizations = confirmed_covid_hosp_last_7_days / 7
+            ) %>%
+            select(
+                fips,
+                hospitalizations
+            )
+
+        # final data
+        "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/" %>%
+        latest_csse_upload() %>%
+        filter(Country_Region == "US") %>%
+        mutate(
+            fips = pad_fips(FIPS),
+            deaths = Deaths,
+            confirmed = Confirmed
+        ) %>%
+        select(
+            fips,
+            deaths,
+            confirmed
+        ) %>%
+        full_join(
+            hospital_data,
+            by = "fips"
+        ) %>%
+        left_join(
+            counties_sf(),
+            .,
+            by = "fips"
+        )
+    }
 )
+
+# free up memory
+rm(hospital_data, csse_data)
+
+# ---- shiny setup
 
 ui <- fluidPage(
     tags$head(
