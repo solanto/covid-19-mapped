@@ -1,8 +1,83 @@
+:root {
+    --foreground: rgb(236, 236, 236);
+}
+
 body {
-    background-color: black;
-    color: white;
+    background-color: #1b1b1b;
+    color: var(--foreground);
+    margin-top: 0.5in;
 }
 
 .leaflet-container {
     background-color: transparent;
+}
+
+.container-fluid {
+    display: flex;
+    justify-content: center;
+}
+
+.user-input {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1ch;
+    align-items: baseline;
+    font-family: "PT Serif";
+    font-weight: bold;
+    font-size: 3rem;
+
+    .shiny-input-container {
+        display: grid;
+        grid-template-columns: max-content max-content;
+        align-items: center;
+        width: auto;
+
+        label {
+            margin-right: 1ch;
+            margin-bottom: 0;
+        }
+    }
+
+    .selectize-input {
+        // height: 1em;
+        color: inherit;
+        box-shadow: 0 1px 0 var(--foreground);
+        border: none;
+        border-radius: 0;
+        background-color: transparent !important;
+        padding: 0;
+        padding-right: 2.5ch;
+        overflow: initial;
+        // min-height: 0;
+
+        // &::after {
+        //     border-top-color: var(--foreground) !important;
+        //     right: 1ch !important;
+        // }
+
+        // .item:first-child {
+        //     display: block;
+        // }
+    }
+
+    .selectize-dropdown {
+        font-family: "Roboto";
+        font-weight: lighter;
+        font-size: 1.5rem;
+    }
+
+    .selectize-control {
+        margin-bottom: 0;
+
+        &.single .selectize-input {
+            &::after, &.dropdown-active::after {
+                border-top-color: var(--foreground) !important;
+                right: 1ch !important;
+            }
+        }
+    }
+}
+
+[role="main"] {
+    padding: 0;
 }

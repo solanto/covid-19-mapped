@@ -14,9 +14,8 @@ needs(
     jsonlite,
     dplyr,
     leaflet,
-    tigris,
     formattable,
-    sass
+    sass,
 )
 
 library(albersusa)
@@ -61,13 +60,13 @@ latest_csse_upload <- function(base_url) {
 }
 
 data_options <- c(
-    "Deaths" = "deaths",
-    "Confirmed cases" = "confirmed",
-    "Hospitalizations" = "hospitalizations"
+    "deaths due to COVID-19" = "deaths",
+    "confirmed COVID-19 cases" = "confirmed",
+    "hospitalizations for COVID-19" = "hospitalizations"
 )
 
 data_levels <- list(
-    "State" = {
+    "state" = {
         state_abbreviations <- setNames(state.name, state.abb)
 
         hospital_data <-
@@ -94,7 +93,7 @@ data_levels <- list(
             deaths = Deaths,
             confirmed = Confirmed
         ) %>%
-        select(
+        dplyr::select(
             name,
             deaths,
             confirmed,
@@ -106,7 +105,7 @@ data_levels <- list(
             by = "name"
         )
     },
-    "County" = {
+    "county" = {
         pad_fips <- . %>%
             formatC(
                 width = 5,
@@ -120,7 +119,7 @@ data_levels <- list(
                 fips = pad_fips(fips),
                 hospitalizations = confirmed_covid_hosp_last_7_days / 7
             ) %>%
-            select(
+            dplyr::select(
                 fips,
                 hospitalizations
             )
@@ -134,7 +133,7 @@ data_levels <- list(
             deaths = Deaths,
             confirmed = Confirmed
         ) %>%
-        select(
+        dplyr::select(
             fips,
             deaths,
             confirmed
@@ -160,24 +159,42 @@ ui <- fluidPage(
     tags$head(
         tags$link(
             href = styles_path,
-            rel = "stylesheet",
-            type = "text/css"
+            rel = "stylesheet"
+        ),
+        tags$link(
+            href = "https://fonts.googleapis.com",
+            rel = "preconnect"
+        ),
+        tags$link(
+            href = "https://fonts.googleapis.com",
+            rel = "preconnect",
+            crossorigin = TRUE
+        ),
+        tags$link(
+            href = "https://fonts.googleapis.com/css2?family=PT+Serif:wght@700&family=Roboto:wght@300&display=swap",
+            rel = "stylesheet"
         )
     ),
     mainPanel(
-        selectInput(
-            inputId = "option_select",
-            label = "yee",
-            choices = names(data_options),
-            selected = "Confirmed cases"
+        tags$section(
+            selectInput(
+                inputId = "option_select",
+                label = "Map",
+                choices = names(data_options),
+                selected = "confirmed COVID-19 cases"
+            ),
+            selectInput(
+                inputId = "level_select",
+                label = "by",
+                choices = names(data_levels),
+                selected = "state"
+            ),
+            class = "user-input"
         ),
-        selectInput(
-            inputId = "level_select",
-            label = "owo",
-            choices = names(data_levels),
-            selected = "State"
-        ),
-        leafletOutput("map")
+        tags$section(
+            leafletOutput("map"),
+            class = "map-display"
+        )
     )
 )
 
@@ -198,10 +215,9 @@ get_map <- function(level, option) {
         as.character() %>%
         data[[.]]
 
-    color_palette <- colorNumeric("OrRd", domain = displayed)
+    color_palette <- colorNumeric("Reds", domain = displayed)
     
     return (
-        data %>%
         leaflet(
             options = leafletOptions(
                 crs = epsg2163,
@@ -210,24 +226,24 @@ get_map <- function(level, option) {
             )
         ) %>%
         addPolygons(
+            data = data,
             popup = paste(
                 data$name,
                 displayed %>% comma(digits = 0) %>% as.character(),
                 sep = ": "
             ),
-            color = "#333",
+            color = color_palette(displayed),
             fillColor = color_palette(displayed),
             opacity = 1,
             fillOpacity = 1,
-            weight = 0.6,
-
+            weight = 2,
         ) %>%
         addLegend(
             "bottomright",
             pal = color_palette,
             values = displayed,
             opacity = 1,
-            na.label = "No data"
+            na.label = "no data"
         )
     )
 }
