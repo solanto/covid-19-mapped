@@ -3,14 +3,13 @@
 # needs(remotes)
 # install_github("hrbrmstr/albersusa")
 
-# ---- packages
+# ---- packages ####
 
 library(needs)
 
 needs(
     shiny,
     magrittr,
-    plotly,
     jsonlite,
     dplyr,
     leaflet,
@@ -20,7 +19,7 @@ needs(
 
 library(albersusa)
 
-# ---- build styles
+# ---- build styles ####
 
 public_dir <- "dist"
 
@@ -43,12 +42,14 @@ addResourcePath(
     directoryPath = public_dir
 )
 
-# ---- get data
+# ---- get data ####
 
-yesterday <-
+# Most recent CSSE data is the one from the day before today
+yesterday <- 
     (Sys.Date() - 1) %>%
     format("%m-%d-%Y")
 
+# Makes most recent data a data frame
 latest_csse_upload <- function(base_url) {
     paste(
         base_url,
@@ -65,6 +66,7 @@ data_options <- c(
     "hospitalizations for COVID-19" = "hospitalizations"
 )
 
+# This makes a list made up of two data frames for state and county level
 data_levels <- list(
     "state" = {
         state_abbreviations <- setNames(state.name, state.abb)
@@ -104,7 +106,7 @@ data_levels <- list(
             .,
             by = "name"
         )
-    },
+    }, #data cleaning for state ends
     "county" = {
         pad_fips <- . %>%
             formatC(
@@ -147,18 +149,18 @@ data_levels <- list(
                 .,
                 by = "fips"
             )
-    }
+    } #data cleaning for county ends
 )
 
 # free up memory
 rm(hospital_data, csse_data)
 
-# ---- pre-generate views
+# ---- pre-generate views ####
 
 # map projection
 epsg2163 <- leafletCRS(
     crsClass = "L.Proj.CRS",
-    code = "EPSG:2163",
+    code = "EPSG:2163", #type of map display
     proj4def = "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +a=6370997 +b=6370997 +units=m +no_defs",
     resolutions = 2 ^ (16:7)
 )
@@ -166,6 +168,7 @@ epsg2163 <- leafletCRS(
 get_map <- function(level, option) {
     data <- data_levels[[level]]
 
+    # displays data based on the vector name in data_options
     displayed <-
         option %>%
         data_options[.] %>%
@@ -182,6 +185,7 @@ get_map <- function(level, option) {
                 # TODO: https://stackoverflow.com/a/58082967
             )
         ) %>%
+            # pop up code
             addPolygons(
                 data = data,
                 popup = paste(
@@ -205,6 +209,17 @@ get_map <- function(level, option) {
     )
 }
 
+# generates maps for all levels and options
+# Strcture example for maps <- data_levels
+# "state":
+#    "deaths" = get_map("state", "deaths")
+#    "hospitalizations" = get_map("state", "hospitalizations)"
+#    "confirmed" = get_map("state, "confirmed")
+# "county":
+#    "deaths" = get_map("county", "deaths")
+#    "hospitalizations" = get_map("county", "hospitalizations)"
+#    "confirmed" = get_map("county, "confirmed")
+
 maps <- data_levels %>%
     names() %>%
     set_names(., .) %>%
@@ -217,6 +232,7 @@ maps <- data_levels %>%
         }
     )
 
+# figures for text in bottom
 summary_figures <-
     data_options %>%
     set_names(data_options) %>%
@@ -228,6 +244,7 @@ summary_figures <-
             tags$strong()
     )
 
+# writing the summary text in bottom
 summaries <- list(
     "deaths" = tags$p(
         "In total, ",
@@ -245,9 +262,10 @@ summaries <- list(
     )
 )
         
-# ---- shiny setup
+# ---- shiny setup ####
 
 ui <- fluidPage(
+    #stylesheets
     tags$head(
         tags$link(
             href = styles_path,
@@ -268,14 +286,14 @@ ui <- fluidPage(
         )
     ),
     mainPanel(
-        tags$section(
+        tags$section(  # select statistic option
             selectInput(
                 inputId = "option_select",
                 label = "Map",
                 choices = names(data_options),
                 selected = "confirmed COVID-19 cases"
             ),
-            selectInput(
+            selectInput( #select map level
                 inputId = "level_select",
                 label = "by",
                 choices = names(data_levels),
@@ -283,11 +301,11 @@ ui <- fluidPage(
             ),
             class = "user-input"
         ),
-        tags$section(
+        tags$section( # map displayed
             leafletOutput("map"),
             class = "map-display"
         ),
-        tags$section(
+        tags$section( # summary statistic in bottom
             htmlOutput("summary"),
             class = "summary"
         )
