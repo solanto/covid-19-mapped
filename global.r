@@ -116,7 +116,7 @@ data_levels <- list(
                 by = "name"
             )
     }, # end state-level data wrangling
-    # begin count-level data wrangling
+    # begin county-level data wrangling
     "county" = {
         # 1/2 - prep
         
