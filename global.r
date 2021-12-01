@@ -171,7 +171,6 @@ rm(hospital_data, csse_data)
 
 # 4. pre-generating views ----------------------------
 
-
 # map projection
 epsg2163 <- leafletCRS(
     crsClass = "L.Proj.CRS",
