@@ -12,7 +12,7 @@ This app:
 
 1. imports the latest COVID-19 data from [HealthData.gov](https://healthdata.gov) and the [Johns Hopkins Center for Systems Science and Engineering](https://systems.jhu.edu/)
 2. wrangles and geocodes the data
-3. generates maps and textual summaries from the data
+3. generates choropleth maps and textual summaries from the data
 4. defines an interactive [Shiny](https://www.rstudio.com/products/shiny/) dashboard
 5. handles user input to switch maps and summaries on-the-fly
 
