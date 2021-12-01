@@ -10,7 +10,7 @@ Written for JHU's EN.560.291 course.
 
 This app:
 
-1. imports the latest data from [HealthData.gov](https://healthdata.gov) and the [Johns Hopkins Center for Systems Science and Engineering](https://systems.jhu.edu/)
+1. imports the latest COVID-19 data from [HealthData.gov](https://healthdata.gov) and the [Johns Hopkins Center for Systems Science and Engineering](https://systems.jhu.edu/)
 2. wrangles and geocodes the data
 3. generates maps and textual summaries from the data
 4. defines an interactive [Shiny](https://www.rstudio.com/products/shiny/) dashboard
