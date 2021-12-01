@@ -120,7 +120,7 @@ data_levels <- list(
     "county" = {
         # 1/2 - prep
         
-        #format integer fips values as 5-character fips strings
+        # format integer fips values as 5-character fips strings
         # for matching in table join
         pad_fips <- . %>%
             formatC(
