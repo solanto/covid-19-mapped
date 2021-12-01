@@ -1,11 +1,11 @@
-# preface -----------------------------------------
+# 0. preface -----------------------------------------
 
 # if `albersusa` and `needs` are not already installed, call:
 # install.packages("needs")
 # needs(remotes)
 # install_github("hrbrmstr/albersusa")
 
-# packages ----------------------------------------
+# 1. packages ----------------------------------------
 
 library(needs)
 
@@ -22,7 +22,7 @@ needs(
 
 library(albersusa)
 
-# build styles ------------------------------------
+# 2. building styles ---------------------------------
 
 public_dir <- "dist"
 
@@ -45,7 +45,7 @@ addResourcePath(
     directoryPath = public_dir
 )
 
-# get data ----------------------------------------
+# 3. getting data ------------------------------------
 
 # most recent CSSE data is the one from the day before today
 # yesterday's date string stored for future use
@@ -173,7 +173,7 @@ data_levels <- list(
 # free up memory
 rm(hospital_data, csse_data)
 
-# pre-generate views ------------------------------
+# 4. pre-generating views ----------------------------
 
 # map projection
 epsg2163 <- leafletCRS(
@@ -284,7 +284,7 @@ summaries <- list(
     )
 )
 
-# shiny setup -------------------------------------
+# 5. shiny setup -------------------------------------
 
 ui <- fluidPage(
     # stylesheets
@@ -354,6 +354,8 @@ server <- function(input, output) {
         summaries[[option()]]
     )
 }
+
+# 6. execution ---------------------------------------
 
 # start app
 shinyApp(ui = ui, server = server)
