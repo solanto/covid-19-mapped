@@ -224,7 +224,7 @@ get_map <- function(level, option) {
     )
 }
 
-# generate maps for all levels and options
+# maps generated for all level and option combinations
 # resulting data structure example:
 # 
 # ```yaml
