@@ -3,8 +3,8 @@
 # to install `albersusa`, call:
 # 
 # ```R
-# install.packages("needs")
-# needs(remotes)
+# install.packages("remotes")
+# library(remotes)
 # install_github("hrbrmstr/albersusa")
 # ```
 
