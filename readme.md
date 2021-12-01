@@ -22,7 +22,7 @@ All data wrangling and view generation happens in [`global.r`](global.r). Using 
 
 ### online
 
-Access the app online on [Shinyapps](https://solanto.shinyapps.io/case-coding-final/).
+Access the app online on [shinyapps.io](https://solanto.shinyapps.io/case-coding-final/).
 
 ### local
 
