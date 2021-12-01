@@ -1,16 +1,19 @@
-# if not already installed, call:
+# preface -----------------------------------------
+
+# if `albersusa` and `needs` are not already installed, call:
 # install.packages("needs")
 # needs(remotes)
 # install_github("hrbrmstr/albersusa")
 
-# ---- packages ####
+# packages ----------------------------------------
 
 library(needs)
 
+# no need to install these manually!
+# `needs` installs missing dependencies automatically
 needs(
     shiny,
     magrittr,
-    jsonlite,
     dplyr,
     leaflet,
     formattable,
@@ -19,7 +22,7 @@ needs(
 
 library(albersusa)
 
-# ---- build styles ####
+# build styles ------------------------------------
 
 public_dir <- "dist"
 
@@ -42,33 +45,43 @@ addResourcePath(
     directoryPath = public_dir
 )
 
-# ---- get data ####
+# get data ----------------------------------------
 
-# Most recent CSSE data is the one from the day before today
+# most recent CSSE data is the one from the day before today
+# yesterday's date string stored for future use
 yesterday <- 
     (Sys.Date() - 1) %>%
     format("%m-%d-%Y")
 
-# Makes most recent data a data frame
+# download most recent data into a data frame
 latest_csse_upload <- function(base_url) {
+    # generate url
     paste(
         base_url,
         yesterday,
         ".csv",
         sep = ""
     ) %>%
+    # download & parse
     read.csv()
 }
 
+# names (keys for) sets of data points to be offered
+# keyed by each the sets' names in the dashboard
 data_options <- c(
     "deaths due to COVID-19" = "deaths",
     "confirmed COVID-19 cases" = "confirmed",
     "hospitalizations for COVID-19" = "hospitalizations"
 )
 
-# This makes a list made up of two data frames for state and county level
+# a named list of data frames
+# ex: one frame for state-level data and one for county-level data
 data_levels <- list(
+    # begin state-level data wrangling
     "state" = {
+        # 1/2 - prep
+        
+        # map state abbreviations to state names
         state_abbreviations <- setNames(state.name, state.abb)
 
         hospital_data <-
@@ -84,30 +97,35 @@ data_levels <- list(
             "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports_us/" %>%
                 latest_csse_upload()
 
-        # final data
+        # 2/2 - final data
         full_join(
             hospital_data,
             csse_data,
             by = c("state" = "Province_State")
         ) %>%
-        mutate(
-            name = state,
-            deaths = Deaths,
-            confirmed = Confirmed
-        ) %>%
-        dplyr::select(
-            name,
-            deaths,
-            confirmed,
-            hospitalizations
-        ) %>%
-        left_join(
-            usa_sf(),
-            .,
-            by = "name"
-        )
-    }, #data cleaning for state ends
+            mutate(
+                name = state,
+                deaths = Deaths,
+                confirmed = Confirmed
+            ) %>%
+            dplyr::select(
+                name,
+                deaths,
+                confirmed,
+                hospitalizations
+            ) %>%
+            left_join(
+                usa_sf(),
+                .,
+                by = "name"
+            )
+    }, # end state-level data wrangling
+    # begin count-level data wrangling
     "county" = {
+        # 1/2 - prep
+        
+        #format integer fips values as 5-character fips strings
+        # for matching in table join
         pad_fips <- . %>%
             formatC(
                 width = 5,
@@ -126,7 +144,7 @@ data_levels <- list(
                     hospitalizations
                 )
 
-        # final data
+        # 2/2 - final data
         "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/" %>%
             latest_csse_upload() %>%
             filter(Country_Region == "US") %>%
@@ -149,52 +167,53 @@ data_levels <- list(
                 .,
                 by = "fips"
             )
-    } #data cleaning for county ends
+    } # end county-level data wrangling
 )
 
 # free up memory
 rm(hospital_data, csse_data)
 
-# ---- pre-generate views ####
+# pre-generate views ------------------------------
 
 # map projection
 epsg2163 <- leafletCRS(
     crsClass = "L.Proj.CRS",
-    code = "EPSG:2163", #type of map display
+    code = "EPSG:2163",
     proj4def = "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +a=6370997 +b=6370997 +units=m +no_defs",
     resolutions = 2 ^ (16:7)
 )
 
+# generate a map given a level (ex: state) & option (ex: deaths)
 get_map <- function(level, option) {
     data <- data_levels[[level]]
 
-    # displays data based on the vector name in data_options
-    displayed <-
+    # extract data points from level data after lookup in options
+    data_points <-
         option %>%
         data_options[.] %>%
         as.character() %>%
         data[[.]]
 
-    color_palette <- colorNumeric("Reds", domain = displayed)
+    color_palette <- colorNumeric("Reds", domain = data_points)
     
     return (
+        # initialize map
         leaflet(
             options = leafletOptions(
                 crs = epsg2163,
                 zoomControl = FALSE
-                # TODO: https://stackoverflow.com/a/58082967
             )
         ) %>%
-            # pop up code
+            # draw choropleth
             addPolygons(
                 data = data,
                 popup = paste(
                     data$name,
-                    displayed %>% comma(digits = 0) %>% as.character(),
+                    data_points %>% comma(digits = 0) %>% as.character(),
                     sep = ": "
                 ),
-                color = color_palette(displayed),
-                fillColor = color_palette(displayed),
+                color = color_palette(data_points),
+                fillColor = color_palette(data_points),
                 opacity = 1,
                 fillOpacity = 1,
                 weight = 2,
@@ -202,49 +221,52 @@ get_map <- function(level, option) {
             addLegend(
                 "bottomright",
                 pal = color_palette,
-                values = displayed,
+                values = data_points,
                 opacity = 1,
                 na.label = "no data"
             )
     )
 }
 
-# generates maps for all levels and options
-# Strcture example for maps <- data_levels
-# "state":
-#    "deaths" = get_map("state", "deaths")
-#    "hospitalizations" = get_map("state", "hospitalizations)"
-#    "confirmed" = get_map("state, "confirmed")
-# "county":
-#    "deaths" = get_map("county", "deaths")
-#    "hospitalizations" = get_map("county", "hospitalizations)"
-#    "confirmed" = get_map("county, "confirmed")
+# generate maps for all levels and options
+# resulting data structure example:
+# 
+# ```yaml
+# state:
+#   - deaths: get_map("state", "deaths")
+#   - hospitalizations: get_map("state", "hospitalizations")
+#   - confirmed: get_map("state, "confirmed")
+# county:
+#   - deaths: get_map("county", "deaths")
+#   - hospitalizations: get_map("county", "hospitalizations")
+#   - confirmed: get_map("county, "confirmed")
+# ```
+maps <-
+    data_levels %>%
+        names() %>% # ex: c("state", "county")
+        set_names(., .) %>% # ex: c("state" = "state", "county" = "county")
+        lapply( # for each level name
+            function(level) {
+                lapply( # for each option name
+                    names(data_options) %>% set_names(data_options),
+                    . %>% get_map(level, .)
+                )
+            }
+        )
 
-maps <- data_levels %>%
-    names() %>%
-    set_names(., .) %>%
-    lapply(
-        function(level) {
-            lapply(
-                names(data_options) %>% set_names(data_options),
-                . %>% get_map(level, .)
-            )
-        }
-    )
-
-# figures for text in bottom
+# numerical figures to be used in summary text
 summary_figures <-
     data_options %>%
-    set_names(data_options) %>%
-    lapply(
+    set_names(data_options) %>% # index results by option names
+    lapply( # for each data option
         . %>%
-            data_levels$state[[.]] %>%
+            data_levels$state[[.]] %>% # get data points
             sum(na.rm = TRUE) %>%
             comma(digits = 0) %>%
-            tags$strong()
+            tags$strong() # indicate urgency in html
     )
 
-# writing the summary text in bottom
+# summary text
 summaries <- list(
     "deaths" = tags$p(
         "In total, ",
@@ -261,11 +283,11 @@ summaries <- list(
         " hosptalizations in the US."
     )
 )
-        
-# ---- shiny setup ####
+
+# shiny setup -------------------------------------
 
 ui <- fluidPage(
-    #stylesheets
+    # stylesheets
     tags$head(
         tags$link(
             href = styles_path,
@@ -285,15 +307,17 @@ ui <- fluidPage(
             rel = "stylesheet"
         )
     ),
+    # dashboard content
     mainPanel(
-        tags$section(  # select statistic option
+        # user inputs for map data level & option
+        tags$section(
             selectInput(
                 inputId = "option_select",
                 label = "Map",
                 choices = names(data_options),
                 selected = "confirmed COVID-19 cases"
             ),
-            selectInput( #select map level
+            selectInput(
                 inputId = "level_select",
                 label = "by",
                 choices = names(data_levels),
@@ -301,11 +325,13 @@ ui <- fluidPage(
             ),
             class = "user-input"
         ),
-        tags$section( # map displayed
+        # map display
+        tags$section(
             leafletOutput("map"),
             class = "map-display"
         ),
-        tags$section( # summary statistic in bottom
+        # summary text
+        tags$section(
             htmlOutput("summary"),
             class = "summary"
         )
@@ -313,17 +339,21 @@ ui <- fluidPage(
 )
 
 server <- function(input, output) {
+    # get option key from option input
     option <- reactive(
         data_options[[input$option_select]]
     )
 
+    # pull selected map & render
     output$map <- renderLeaflet(
         maps[[input$level_select]][[option()]]
     )
 
+    # pull appropriate summary text & render
     output$summary <- renderUI(
         summaries[[option()]]
     )
 }
 
+# start app
 shinyApp(ui = ui, server = server)
