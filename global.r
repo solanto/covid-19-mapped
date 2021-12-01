@@ -276,6 +276,6 @@ summaries <- list(
     "hospitalizations" = tags$p(
         "In total, COVID-19 has resulted in ",
         summary_figures$hospitalizations,
-        " hosptalizations in the US."
+        " hospitalizations in the US."
     )
 )
