@@ -63,7 +63,7 @@ latest_csse_upload <- function(base_url) {
 }
 
 # names (keys for) sets of data points to be offered
-# keyed by each the sets' names in the dashboard
+# keyed by each of the sets' names in the dashboard
 data_options <- c(
     "deaths due to COVID-19" = "deaths",
     "confirmed COVID-19 cases" = "confirmed",
