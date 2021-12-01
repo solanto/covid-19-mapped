@@ -1,12 +1,12 @@
 # CaSE  Coding final
 
-<a href="https://solanto.shinyapps.io/case-coding-final/">
-  <img src="https://user-images.githubusercontent.com/20602415/144188232-8f11c916-f4c8-43ee-80ec-4c9fe5f35cd4.png" width="500" />
-</a>
-
 Written for JHU's EN.560.291 course.
 
 ## description
+
+<a href="https://solanto.shinyapps.io/case-coding-final/">
+  <img src="https://user-images.githubusercontent.com/20602415/144188232-8f11c916-f4c8-43ee-80ec-4c9fe5f35cd4.png" width="500" />
+</a>
 
 This app:
 
