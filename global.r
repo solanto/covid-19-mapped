@@ -1,25 +1,21 @@
 # 0. preface -----------------------------------------
 
-# if `albersusa` and `needs` are not already installed, call:
+# to install `albersusa`, call:
+# 
+# ```R
 # install.packages("needs")
 # needs(remotes)
 # install_github("hrbrmstr/albersusa")
+# ```
 
 # 1. packages ----------------------------------------
 
-library(needs)
-
-# no need to install these manually!
-# `needs` installs missing dependencies automatically
-needs(
-    shiny,
-    magrittr,
-    dplyr,
-    leaflet,
-    formattable,
-    sass
-)
-
+library(shiny)
+library(magrittr)
+library(dplyr)
+library(leaflet)
+library(formattable)
+library(sass)
 library(albersusa)
 
 # 2. building styles ---------------------------------
@@ -175,6 +171,7 @@ rm(hospital_data, csse_data)
 
 # 4. pre-generating views ----------------------------
 
+
 # map projection
 epsg2163 <- leafletCRS(
     crsClass = "L.Proj.CRS",
@@ -283,79 +280,3 @@ summaries <- list(
         " hosptalizations in the US."
     )
 )
-
-# 5. shiny setup -------------------------------------
-
-ui <- fluidPage(
-    # stylesheets
-    tags$head(
-        tags$link(
-            href = styles_path,
-            rel = "stylesheet"
-        ),
-        tags$link(
-            href = "https://fonts.googleapis.com",
-            rel = "preconnect"
-        ),
-        tags$link(
-            href = "https://fonts.googleapis.com",
-            rel = "preconnect",
-            crossorigin = TRUE
-        ),
-        tags$link(
-            href = "https://fonts.googleapis.com/css2?family=PT+Serif:wght@700&family=Roboto&display=swap",
-            rel = "stylesheet"
-        )
-    ),
-    # dashboard content
-    mainPanel(
-        # user inputs for map data level & option
-        tags$section(
-            selectInput(
-                inputId = "option_select",
-                label = "Map",
-                choices = names(data_options),
-                selected = "confirmed COVID-19 cases"
-            ),
-            selectInput(
-                inputId = "level_select",
-                label = "by",
-                choices = names(data_levels),
-                selected = "state"
-            ),
-            class = "user-input"
-        ),
-        # map display
-        tags$section(
-            leafletOutput("map"),
-            class = "map-display"
-        ),
-        # summary text
-        tags$section(
-            htmlOutput("summary"),
-            class = "summary"
-        )
-    )
-)
-
-server <- function(input, output) {
-    # get option key from option input
-    option <- reactive(
-        data_options[[input$option_select]]
-    )
-
-    # pull selected map & render
-    output$map <- renderLeaflet(
-        maps[[input$level_select]][[option()]]
-    )
-
-    # pull appropriate summary text & render
-    output$summary <- renderUI(
-        summaries[[option()]]
-    )
-}
-
-# 6. execution ---------------------------------------
-
-# start app
-shinyApp(ui = ui, server = server)
