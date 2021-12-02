@@ -16,6 +16,7 @@ library(dplyr)
 library(leaflet)
 library(formattable)
 library(sass)
+library(lubridate)
 library(albersusa)
 
 # 2. building styles ---------------------------------
