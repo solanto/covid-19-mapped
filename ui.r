@@ -69,12 +69,6 @@ fluidPage(
                     "Johns Hopkins Center for Systems Science and Engineering.",
                     href = "https://systems.jhu.edu/",
                     target = "_blank"
-                ),
-                "Favicon by ",
-                tags$a(
-                    "Icons8.",
-                    href = "https://icons8.com/",
-                    target = "_blank"
                 )
             )
         )
