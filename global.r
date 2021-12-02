@@ -43,10 +43,12 @@ addResourcePath(
 
 # 3. getting data ------------------------------------
 
-# most recent CSSE data is the one from the day before today
-# yesterday's date string stored for future use
-yesterday <- 
-    (Sys.Date() - 1) %>%
+# CSSE data is posted midnight eastern time
+# the day before the current day in eastern time
+# formatted to match CSSE data filenames
+yesterday <-
+    today("America/New_York") %>%
+    - 1 %>%
     format("%m-%d-%Y")
 
 # download most recent data into a data frame
