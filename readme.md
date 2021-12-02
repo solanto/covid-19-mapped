@@ -1,4 +1,4 @@
-# CaSE  Coding final
+# COVID-19 mapped
 
 Written for JHU's EN.560.291 course.
 
