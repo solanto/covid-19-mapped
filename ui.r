@@ -55,6 +55,20 @@ fluidPage(
                     "GitHub.",
                     href = "https://github.com/solanto/covid-19-mapped",
                     target = "_blank"
+                )
+            ),
+            tags$p(
+                "Data from",
+                tags$a(
+                    "HealthData.gov",
+                    href = "https://healthdata.gov/",
+                    target = "_blank"
+                ),
+                " and the ",
+                tags$a(
+                    "Johns Hopkins Center for Systems Science and Engineering.",
+                    href = "https://systems.jhu.edu/",
+                    target = "_blank"
                 ),
                 "Favicon by ",
                 tags$a(

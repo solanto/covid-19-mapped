@@ -102,8 +102,8 @@ footer {
     margin-top: 3em;
     color:rgb(199, 199, 199);
 
-    p {
-        margin: 0;
+    p:last-child {
+        margin-bottom: 0;
     }
 
     a {
