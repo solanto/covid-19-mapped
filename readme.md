@@ -43,3 +43,7 @@ runApp()
 ```
 
 Alternatively, open the project in RStudio and run the app using the IDE's built-in Shiny capabilities.
+
+## credits
+
+[`favicon.ico`](www/favicon.ico) by [Icons8](https://icons8.com/).

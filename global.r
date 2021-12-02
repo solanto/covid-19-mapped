@@ -21,13 +21,13 @@ library(albersusa)
 
 # 2. building styles ---------------------------------
 
-public_dir <- "dist"
+style_dir <- "styles"
 
-dir.create(public_dir, showWarnings = FALSE)
+dir.create(style_dir, showWarnings = FALSE)
 
 styles_path <-
     paste(
-        public_dir,
+        style_dir,
         "/styles.css",
         sep = ""
     )
@@ -38,8 +38,8 @@ sass(
 )
 
 addResourcePath(
-    prefix = public_dir,
-    directoryPath = public_dir
+    prefix = style_dir,
+    directoryPath = style_dir
 )
 
 # 3. getting data ------------------------------------
