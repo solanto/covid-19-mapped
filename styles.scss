@@ -5,16 +5,15 @@
 body {
     background-color: #1b1b1b;
     color: var(--foreground);
-    margin-top: 0.5in;
+    margin-top: clamp(2rem, 6vh, 0.5in);
+}
+
+body, .leaflet-control, .leaflet-container {
     font-family: "Roboto";
 }
 
 .leaflet-container {
     background-color: transparent;
-}
-
-.leaflet-control, .leaflet-container {
-    font-family: "Roboto";
 }
 
 .container-fluid {
@@ -31,8 +30,12 @@ body {
     font-weight: bold;
     font-size: 3rem;
 
+    .form-group {
+        margin-bottom: 0;
+    }
+
     .shiny-input-container {
-        display: grid;
+        display: inline-flex;
         grid-template-columns: max-content max-content;
         align-items: center;
         width: auto;
@@ -53,6 +56,7 @@ body {
         padding: 0;
         padding-right: 2.5ch;
         overflow: initial;
+        line-height: 1;
     }
 
     .selectize-dropdown {
@@ -80,11 +84,15 @@ body {
 .summary {
     font-size: 1.2em;
 
+    p {
+        margin: 0;
+    }
+
     strong {
         font-weight: bold;
     }
 }
 
-.user-input, .leaflet-container, .summary {
-    margin-bottom: 8rem;
+.user-input, .leaflet-container {
+    margin-bottom: clamp(2rem, 6vw, 7rem);
 }
