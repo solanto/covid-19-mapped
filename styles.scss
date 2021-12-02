@@ -5,7 +5,7 @@
 body {
     background-color: #1b1b1b;
     color: var(--foreground);
-    margin-top: clamp(2rem, 6vh, 0.5in);
+    margin: clamp(2rem, 6vh, 0.5in) 0;
 }
 
 body, .leaflet-control, .leaflet-container {
@@ -95,4 +95,24 @@ body, .leaflet-control, .leaflet-container {
 
 .user-input, .leaflet-container {
     margin-bottom: clamp(2rem, 6vw, 7rem);
+}
+
+footer {
+    font-size: 1.1rem;
+    margin-top: 3em;
+    color:rgb(199, 199, 199);
+
+    p {
+        margin: 0;
+    }
+
+    a {
+        color: inherit;
+        text-decoration: underline;
+
+        &:focus, &:hover {
+            color: inherit;
+            text-decoration-style: dashed;
+        }
+    }
 }

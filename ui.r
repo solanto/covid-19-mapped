@@ -1,4 +1,5 @@
 fluidPage(
+    title = "COVID-19 Mapped",
     # stylesheets
     tags$head(
         tags$link(
@@ -46,6 +47,22 @@ fluidPage(
         tags$section(
             htmlOutput("summary"),
             class = "summary"
+        ),
+        tags$footer(
+            tags$p(
+                "Made with care by Andrew Solanto & Kristen Corlay. Source on ",
+                tags$a(
+                    "GitHub.",
+                    href = "https://github.com/solanto/covid-19-mapped",
+                    target = "_blank"
+                ),
+                "Favicon by ",
+                tags$a(
+                    "Icons8.",
+                    href = "https://icons8.com/",
+                    target = "_blank"
+                )
+            )
         )
     )
 )

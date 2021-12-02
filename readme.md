@@ -22,7 +22,7 @@ All data wrangling and view generation happens in [`global.r`](global.r). Using 
 
 ### online
 
-Access the app online on [shinyapps.io](https://solanto.shinyapps.io/case-coding-final/).
+Access the app online on [shinyapps.io](https://solanto.shinyapps.io/covid-19-mapped/).
 
 ### local
 
@@ -43,3 +43,7 @@ runApp()
 ```
 
 Alternatively, open the project in RStudio and run the app using the IDE's built-in Shiny capabilities.
+
+## credits
+
+[`favicon.ico`](www/favicon.ico) by [Icons8](https://icons8.com/).
