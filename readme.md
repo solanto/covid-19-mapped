@@ -39,6 +39,7 @@ install_github("hrbrmstr/albersusa")
 Clone the repository and run the following in an R shell whose working directory is the repository's root directory:
 
 ```R
+library(shiny)
 runApp()
 ```
 
